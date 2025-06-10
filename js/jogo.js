@@ -2,93 +2,90 @@ let desempenho = 0;
 let tentativas = 0;
 let acertos = 0;
 let jogar = true;
-
 const btnReiniciar = document.getElementById("reiniciar");
 const btnJogarNovamente = document.getElementById("joganovamente");
+
+function limparTabuleiro() {
+  const divis = document.getElementsByTagName("div");
+  for (let i = 0; i < divis.length; i++) {
+    if (["0", "1", "2", "3"].includes(divis[i].id)) {
+      divis[i].className = "inicial";
+      divis[i].innerHTML = "";
+    }
+  }
+}
+
+function alternarBotoes(mostrarJogarNovamente) {
+  if (mostrarJogarNovamente) {
+    btnJogarNovamente.className = "visivel";
+    btnReiniciar.className = "invisivel";
+  } else {
+    btnJogarNovamente.className = "invisivel";
+    btnReiniciar.className = "visivel";
+  }
+}
 
 function reiniciar() {
   desempenho = 0;
   tentativas = 0;
   acertos = 0;
   jogar = true;
-  jogarNovamente();
-  atualizaPlacar(0, 0);
-  btnJogarNovamente.className = "visivel";
-  btnReiniciar.className = "invisivel";
+  limparTabuleiro();
+  atualizaPlacar();
+  alternarBotoes(true);
 }
 
 function jogarNovamente() {
   jogar = true;
-  let divis = document.getElementsByTagName("div");
-
-  for (let i = 0; i < divis.length; i++) {
-    if (["0", "1", "2", "3"].includes(divis[i].id)) {
-      divis[i].className = "inicial";
-      divis[i].innerHTML = ""; // Limpa conteúdo anterior
-    }
-  }
-
-  const imagem = document.getElementById("imagem");
-  if (imagem) imagem.remove();
-
-  const imageme = document.getElementById("imageme");
-  if (imageme) imageme.remove();
+  limparTabuleiro();
 }
 
-function atualizaPlacar(acertos, tentativas) {
-  desempenho = (acertos / tentativas) * 100;
+function atualizaPlacar() {
+  desempenho = tentativas > 0 ? (acertos / tentativas) * 100 : 0;
   document.getElementById("resposta").innerHTML =
-    "Placar - Acertos: " +
-    acertos +
-    " Tentativas: " +
-    tentativas +
-    " Desempenho: " +
-    Math.round(desempenho) +
-    "%";
+    `Placar - Acertos: ${acertos} Tentativas: ${tentativas} Desempenho: ${Math.round(desempenho)}%`;
 }
 
-function acertou(obj) {
-  obj.className = "acertou";
+function adicionarImagem(obj, tipo) {
   const img = new Image(100);
-  img.id = "imagem";
-  img.src =
-    "https://www.shutterstock.com/shutterstock/photos/2531946699/display_1500/stock-photo-smiling-d-emoji-with-giant-star-eyes-starry-eyed-round-face-with-stars-happy-d-emoji-with-2531946699.jpg";
+  
+  if (tipo === "acerto") {
+    img.id = "imagem";
+    img.src = "https://www.shutterstock.com/shutterstock/photos/2531946699/display_1500/stock-photo-smiling-d-emoji-with-giant-star-eyes-starry-eyed-round-face-with-stars-happy-d-emoji-with-2531946699.jpg";
+    obj.className = "acertou";
+  } else {
+    img.id = "imageme" + obj.id; // ID único para cada carta errada
+    img.src = "https://cdn.pixabay.com/photo/2020/02/08/00/40/emoji-4828792_1280.png";
+    obj.className = "errou";
+  }
+  
   obj.appendChild(img);
 }
 
-function errou(obj) {
-  obj.className = "errou";
-  const imge = new Image(100);
-  imge.id = "imageme";
-  imge.src =
-    "https://cdn.pixabay.com/photo/2020/02/08/00/40/emoji-4828792_1280.png";
-  obj.appendChild(imge);
-}
-
 function verifica(obj) {
-  if (jogar) {
-    jogar = false;
-    tentativas++;
-
-    if (tentativas === 4) {
-      btnJogarNovamente.className = "invisivel";
-      btnReiniciar.className = "visivel";
-    }
-
-    let sorteado = Math.floor(Math.random() * 4);
-
-    if (obj.id == sorteado) {
-      acertou(obj);
-      acertos++;
-    } else {
-      const objSorteado = document.getElementById(sorteado);
-      acertou(objSorteado);
-      errou(obj);
-    }
-
-    atualizaPlacar(acertos, tentativas);
-  } else {
+  if (!jogar) {
     alert('Clique em "Jogar novamente"');
+    return;
+  }
+  
+  jogar = false;
+  tentativas++;
+  
+  const sorteado = Math.floor(Math.random() * 4);
+  const objSorteado = document.getElementById(sorteado);
+  
+  if (obj.id == sorteado) {
+    adicionarImagem(obj, "acerto");
+    acertos++;
+  } else {
+    adicionarImagem(objSorteado, "acerto");
+    adicionarImagem(obj, "erro");
+  }
+  
+  atualizaPlacar();
+  
+  if (tentativas === 4) {
+    alternarBotoes(false);
   }
 }
 
